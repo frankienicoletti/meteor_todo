@@ -1,9 +1,7 @@
-// simple-todos.js
 Tasks = new Mongo.Collection("tasks");
 
 if (Meteor.isClient) {
   // This code only runs on the client
-// Replace the existing Template.body.helpers
   Template.body.helpers({
     tasks: function () {
       if (Session.get("hideCompleted")) {
@@ -22,16 +20,17 @@ if (Meteor.isClient) {
       return Tasks.find({checked: {$ne: true}}).count();
     }
   });
-  // Inside the if (Meteor.isClient) block, right after Template.body.helpers:
+
   Template.body.events({
     "submit .new-task": function (event) {
       // This function is called when the new task form is submitted
-
       var text = event.target.text.value;
 
       Tasks.insert({
         text: text,
-        createdAt: new Date() // current time
+        createdAt: new Date(), // current time
+        owner: Meteor.userId(),           // _id of logged in user
+        username: Meteor.user().username  // username of logged in user
       });
 
       // Clear form
@@ -39,6 +38,9 @@ if (Meteor.isClient) {
 
       // Prevent default form submit
       return false;
+    },
+    "change .hide-completed input": function (event) {
+      Session.set("hideCompleted", event.target.checked);
     }
   });
 
@@ -49,10 +51,10 @@ if (Meteor.isClient) {
     },
     "click .delete": function () {
       Tasks.remove(this._id);
-    },
-    // Add to Template.body.events
-    "change .hide-completed input": function (event) {
-      Session.set("hideCompleted", event.target.checked);
     }
+  });
+
+  Accounts.ui.config({
+    passwordSignupFields: "USERNAME_ONLY"
   });
 }
